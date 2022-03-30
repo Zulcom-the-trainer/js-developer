@@ -1,129 +1,144 @@
-# Основы JavaScript
+1) Написать функцию, которая будет находить сотрудника по id
 
-## Занятие 2. JSON, работа с объектами и массивами.
-
-### Сконструировать JSON с сотрудниками, их телефонами и адресами
-
-Информация о сотруднике должна включать `id`, `name` (имя) и `surname` (фамилию) сотрудника.
-
-Поместить в файл `employees-json.js`:
+Функция `findById(id)` должна перебирать всех сотрудников и находить сотрудника с совпадающим `id`.
 
 ```javascript
-const DATA = {
-    employees: [
-        {
-            id: 1,
-            name: "Пафнутий",
-            surname: "Пафнутьев",
-            department: "IT"
-        }
-    ]
-}
-```
-
-Добавить информацию о нескольких сотрудниках (c id=2, id=3, ...).
-
-### Подключить скрипт и JSON к файлу HTML
-
-Создать файл `index.html`, используя стандартный шаблон WebStorm. В конце прописать:
-
-```html
-
-<meta charset="utf-8"/>
-
-<script src="employees-json.js"></script>
-<script src="service.js"></script>
-```
-
-Создать файл `service.js`, в который будут добавляться функции.
-
-### Реализовать функцию для поиска сотрудника по имени и фамилии (возвращать массив).
-
-Разработать функцию `findByName(name, surname)`
-Функция находит сотрудника по его имени. В случае, если имя или фамилия пустые, они игнорируются. Например,
-`findByName("","")` находит всех сотрудников. `findByName("Иван")` находит всех Иванов. `findByName(null,"Иванов")`
-находит всех Ивановых. Использовать цикл `for` (лучше `for ... of`) для перебора сотрудников.
-
-```javascript
-function findByName(name, surname) {
-    let res = [];
+function findById(id) {
     for (var e of DATA.employees) {
-        if ((!name || e.name === name) &&
-            (!surname || e.surname === surname)) {
-            res.push(e);
+        if (id == e.id) {
+            return e;
         }
     }
-    return res;
+    throw Error("сотрудник с id=" + id + "не найден !");
 }
 ```
 
-### Реализовать функцию для добавления сотрудника по имени и фамилии.
+2) Оптимизировать поиск по `id`: использовать объект для кэширования.
 
-Функция добавляет сотрудника по имени. `id` присваивается автоматически, как самый большой `id` среди сотрудников + 1. В
-случае, если имя или фамилия не заданы, функция выбрасывает исключение с сообщением об
-ошибке. `addEmployee(name, surname)`
+Создать объект `employeeMap={}` и сохранять там уже найденных сотрудников. Использовать `id` в качестве ключа и ссылку
+на сотрудника в качестве значения.
 
 ```javascript
-function addEmployee(name, surname) {
-    if (!name || name.length == 0 || !surname || surname.length == 0) {
-        throw new Error("name and surname should be not empty");
+
+const employeeMap = {};
+
+function findById(id) {
+    if (employeeMap[id]) {
+        return employeeMap[id];
     }
-    let max = 0;
-    for (let e of DATA.employees) {
-        if (e.id > max) max = e.id;
+    for (var e of DATA.employees) {
+        if (id == e.id) {
+            employeeMap[id] = e;
+            return e;
+        }
     }
-    let id = max + 1;
-    DATA.employees.push({id, name, surname});
-    return id;
 }
+
 ```
 
-### Разработать функцию для удаления сотрудника по `id`.
+3) Реализовать метод для добавления телефона сотрудника.
 
-Использовать `for...of` для поиска сотрудника. Использовать метод массива `splice(index, amount)` для удаления.
+`addPhone(id, phone)`
+Список телефонов должен храниться внутри JSON-объекта сотрудник. В качестве поля используется свойство phones типа
+массив. Если такое поле у сотрудника отсутствует, оно должно быть создано.
 
 ```javascript
-function removeEmployee(id) {
-    let index = 0;
-    for (let e of DATA.employees) {
-        if (e.id === id) break;
-        index++;
+function addPhone(id, phone) {
+    const employee = findById(id);
+    const phones = employee.phones;
+    if (!phones) {
+        employee.phones = [];
     }
-    DATA.employees.splice(index, 1);
+    employee.phones.push(phone);
 }
 ```
 
-### Разработать функцию для вывода в консоль всей информации по сотруднику.
+4) Реализовать метод, устанавливающий дату рождения сотрудника
 
-Функция `showEmployee(employee)` должна выводить в консоль всю информацию о сотруднике. Для этого функция должна
-использовать метод `Object.keys` для получения всех полей объекта `employee`. Далее она должна выводить информацию в
-формате ключ=значение в консоль, используя метод `console.log()`.
+`setDateOfBirth(id, date)`
 
 ```javascript
-function showEmployee(employee) {
-    const keys = Object.keys(employee);
-    console.log("Информация о сотруднике " + employee["name"] + ":");
-    for (let key of keys) {
-        console.log(key + " = " + employee[key]);
-    }
+function setDateOfBirth(id, date) {
+    const employee = findById(id);
+    employee.dateOfBirth = date;
 }
 ```
 
-### Реализовать функцию, выводящую список всех сотрудников.
+5) Реализовать метод, возвращающий возраст сотрудника.
 
-Функция `showEmployees()` должна брать список всех сотрудников из JSON и выводить информацию по каждому, используя
-функцию`showEmployee(employee)`. Для перебора можно использовать `for...of`. Альтернативно можно использовать `forEach`.
+Функция `getAge(id)` принимает `id` сотрудника в качестве параметра и возвращает возраст сотрудника. Стоит отметить
+здесь, что в подобных случаях не стоит изобретать велосипед, и лучше нагуглить подходящее решение.
 
 ```javascript
-function showEmployees() { // альтернативный вариант:
-// DATA.employees.forEach(showEmployee); 
-    /*
-    for (let e of DATA.employees) { 
-     showEmployee(e); 
-    */
+function getAge(id) {
+    const employee = findById(id);
+    let ageDiff = Date.now() - employee.dateOfBirth.getTime();
+    let  ageDate = new Date(ageDiff); // miliseconds from epoch return Math.abs(ageDate.getUTCFullYear() - 1970); 
 }
 ```
 
-### Проверять работу функций в консоли
+6) Написать функцию, форматирующую дату и возвращающую ее в формате дд.мм.гггг.
 
-Открыть консоль в браузере и запустить разные функции для проверки их работоспособности.
+`formatDate(date)`
+Данная функция должна возвращать строку с датой. Для этого можно использовать методы класса `Date`: `getDate()`
+, `getMonth()`,
+`getYear()`. Для даты и месяца надо добавлять на первую позицию `0`, если дата или месяц меньше `10`.
+
+```javascript
+function formatDate(
+    date) {
+    let day = date.getDate();
+    if (day < 10) day = '0' + day;
+    let month = date.getMonth() + 1;
+    if (month < 10) month = '0' + month;
+    let year = date.getFullYear();
+
+    return day + '.' + month + '.' + year;
+}
+```
+
+7) Написать функцию, возвращающую подробную информацию о сотруднике.
+
+Функция `getEmployeeInfo(id)` должна возвращать строку, содержащую подробную информацию о сотруднике: имя, фамилию, дату
+рождения в отформатированном виде, возраст, список телефонов сотрудника.
+
+```javascript
+function getEmployeeInfo(id) {
+    const e = findById(id);
+    const phones = e.phones ? `Список телефонов: ${e.phones}` : '';
+    const age = e.dateOfBirth ? `Возраст: ${getAge(e.id)}` : '';
+    return `Имя: ${e.name} Фамилия: ${e.surname} Дата рождения: ${formatDate(e.dateOfBirth)} ${phones} ${age}
+`;
+}
+```
+
+8) Написать тестовую функцию, которая добавляет сотрудника, добавляет телефоны, устанавливает дату рождения, и выводит
+   подробную информацию о сотруднике в консоль.
+
+Функция `testEmployee()` предназначена для тестирования функций с консоли.
+
+```javascript
+function testEmployee() {
+    addPhone(133, "555-55-55");
+    addPhone(133, "666-66-66");
+    setDateOfBirth(133, new Date(
+        2000, 1, 1))
+    const info = getEmployeeInfo(133);
+    console.log(info);
+}
+```
+
+9) Написать функцию, которая выводит информацию о сотруднике в формате JSON строки
+
+Функция должна использовать метод JSON.stringify().
+
+```javascript
+
+function getEmployeeJSON(id) {
+    const e = findById(id);
+    return JSON.stringify(e);
+}
+
+```
+
+
