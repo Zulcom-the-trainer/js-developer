@@ -49,6 +49,14 @@ function showEmployees(employees) {
 }
 
 /**
+ * Обработчик кнопки удаления сотрудника
+ * @param id
+ */
+function removeEmployeeUI(id) {
+    removeEmployee(id);
+    showEmployees(DATA.employees);
+}
+/**
  *
  */
 function clearEmployeeElement() {

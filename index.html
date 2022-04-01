@@ -20,8 +20,8 @@
             color: #4d4d4d;
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 16px;
-            height:100vh;
-            display:flex;
+            height: 100vh;
+            display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
@@ -32,16 +32,25 @@
             padding: 0 10px;
         }
 
+        tbody tr td:last-child button {
+            margin-bottom: 5px;
+        }
+
+        tbody tr:last-child td:last-child button {
+            margin-bottom: 0;
+        }
+
         form {
             display: flex;
             flex-wrap: wrap;
-            gap:5px 5px;
+            gap: 5px 5px;
             max-width: 500px;
             margin-bottom: 20px;
         }
-        form label{
+
+        form label {
             width: 100%;
-            flex-grow:1;
+            flex-grow: 1;
         }
 
     </style>

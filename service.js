@@ -7,6 +7,7 @@
  * @property {string} department
  * @property {Date|undefined} dateOfBirth дата рождения сотрудника
  * @property {string[]|undefined} phones список телефонов сотрудника
+ * @property {number} managerId ид руководителя
  */
 /**
  * Функция находит сотрудника по его имени.
@@ -225,4 +226,11 @@ function testEmployee() {
     setDateOfBirth(133, new Date(2000, 1, 1))
     const info = getEmployeeInfo(133);
     console.log(info);
+}
+
+/**
+ * @returns {SelectOption[]}
+ */
+function getEmployeesOptions() {
+
 }
