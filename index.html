@@ -6,9 +6,88 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Employees</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans&display=swap');
+
+        .field-error {
+            color: tomato;
+            margin: 0;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #4d4d4d;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 16px;
+            height:100vh;
+            display:flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        tbody tr td {
+            border-left: 2px solid #ccc;
+            padding: 0 10px;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap:5px 5px;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        form label{
+            width: 100%;
+            flex-grow:1;
+        }
+
+    </style>
 </head>
 <body>
+<form name="addEmployeeForm">
+    <label>
+        Имя сотрудника:
+        <input type="text" name="username" autocomplete="off">
+    </label>
+    <p id="addEmployeeForm-error-username" class="field-error"></p>
+    <label>
+        Фамилия сотрудника:
+        <input type="text" name="surname" autocomplete="off">
+    </label>
+    <p id="addEmployeeForm-error-surname" class="field-error"></p>
+    <button type="submit">Добавить</button>
+    <button type="reset">Очистить форму</button>
+</form>
+<div id="employeesPlaceholder"></div>
 <script src="employees-json.js"></script>
 <script src="service.js"></script>
+<script src="ui.js"></script>
+<template id="employeeTableTemplate">
+    <table cellspacing="0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Date of birth</th>
+                <th>Age</th>
+                <th>Phones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td data-field="id"></td>
+                <td data-field="name"></td>
+                <td data-field="department"></td>
+                <td data-field="dateOfBirth"></td>
+                <td data-field="age"></td>
+                <td data-field="phones"></td>
+            </tr>
+        </tbody>
+    </table>
+</template>
 </body>
 </html>

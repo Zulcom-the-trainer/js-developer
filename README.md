@@ -1,139 +1,149 @@
-### Написать функцию, которая выводит список всех сотрудников в список <ul>
-Функция `showEmployees(employees)` должна использовать DOM для создания элементов `<li> списка <ul>`. В каждом элементе
-должны выводиться данные об одном сотруднике. Должно выводиться имя и фамилия сотрудника. Результат должен помещаться в
-PLACEHOLDER, заранее добавленный на страницу:
+# Занятие 2. Расширение функциональности. Работа с событиями.
 
-```html
-<div id="employeesPlaceholder"></div>
-```
+## Реализуем возможность удаления сотрудника из списка
 
-Перед повторным заполнением плейсхолдер должен очищаться:
+В цикле функции `showEmployees()` добавьте код для добавления кнопки Удалить для каждого сотрудника в списке:
 
 ```javascript
-function clearEmployeesPlaceholder() {
-    document.getElementById(PLACEHOLDER).innerHTML = '';
-}
+ const removeButton = document.createElement("button");
+removeButton.innerHTML = "Удалить";
+removeButton.addEventListener('click',
+    () => removeEmployeeUI(employee.id));
+li.appendChild(removeButton);
 ```
 
-Также объявите константу `PLACEHOLDER`, равную `employeesPlaceholder`.
-
-Функцию нужно поместить в файл `ui.js` и подключить файл к HTML-файлу.
+Также необходимо реализовать метод `removeEmployeeUI`. Эта функция должна вызывать `removeEmployee(id)` из `service.js`.
+После удаления сотрудника необходимо перерисовать список всех сотрудников вызовом `showEmployees()`.
 
 ```javascript
-function showEmployees(employees) {
-    clearEmployeesPlaceholder();
-    const ul = document.createElement("ul");
-    for (let employee of employees) {
-        const li = document.createElement("li");
-        ul.appendChild(li);
-
-        li.innerHTML = employee.name + " " + employee.surname;
-
-    }
-    document.getElementById(PLACEHOLDER).appendChild(ul);
-}
-```
-
-### Запускать функцию показа списка сотрудников при открытии страницы.
-
-Для этого нужно сделать функцию `runUI`, в которой будут помещены все действия, выполняемые при загрузке страницы.
-
-Данную функцию можно вызывать после подключения скриптов в HTML:
-
-```html
-<script src="employees-json.js"></script>
-<script src="service.js"></script>
-<script src="ui.js"></script>
-```
-
-В конце документа добавьте вызов runUI:
-
-```html
-<script>
-    runUI();
-</script>
-
-```
-
-Сама функция пока что выглядит тривиально:
-
-```javascript
-function runUI() {
-    showEmployees(DATA.employees);
-}
-
-```
-
-### Создать форму с возможностью добавить нового сотрудника и полями name и surname.
-
-Сама форма должна располагаться в `index.html`:
-
-```html
-<div>
-    Имя:
-    <input id="name" placeholder="Имя">
-
-    Фамилия:
-    <input id="surname" placeholder="Фамилия">
-
-    <button onclick="addEmployeeUI()">Добавить сотрудника</button>
-
-</div>
-
-```
-
-При нажатии на кнопку должна вызываться функция `addEmployeeUI()`:
-
-```javascript
-function addEmployeeUI() {
-    const name = document.getElementById("name").value;
-    const surname = document.getElementById("surname").value;
-    const id = addEmployee(name, surname);
+function removeEmployeeUI(id) {
+    removeEmployee(id);
     showEmployees(DATA.employees);
 }
 ```
 
-4) Нужно предусмотреть валидацию данных формы. Если name или surname не заполнены, должно показываться сообщение об
-   ошибке.
-
-Для этого после формы следует предусмотреть соответствующий плейсхолдер:
-```html
-<div id="addEmployeeFormErrorMessage"></div>
-```
-
-А в самой функции нужно его заполнять в случае наличия ошибок:
+Код для удаления сотрудника может выглядеть так:
 
 ```javascript
-function addEmployeeUI() {
-    let errorHTML = "";
-    const name = document.getElementById("name").value;
-    if (name == "") {
-        errorHTML += "- Имя сотрудника должно быть задано<br>";
+function removeEmployee(id) {
+    let index = 0;
+    for (let e of DATA.employees) {
+        if (e.id === id) break;
+        index++;
     }
-    const surname = document.getElementById("surname").value;
-    if (
-        surname == "") {
-        errorHTML += "- Фамилия сотрудника должна быть задана<br>";
-    }
-    document.getElementById("addEmployeeFormErrorMessage").innerHTML = errorHTML;
-    if (errorHTML.length != 0) return;
-
-    addEmployee(name, surname);
-
-    showEmployees(DATA.employees);
+    DATA.employees.splice(index, 1);
 }
 ```
 
-### После добавления сотрудника данные в форме следует очищать.
+Также вы можете использовать `findIndex` для поиска номера элемента с определенным `id`.
 
-Для этого в функции addEmployeeUI() нужно очищать поля формы после отправки:
+## Создаем возможность добавлять руководителя.
 
-```javascript
-document.getElementById("name").value = "";
-document.getElementById("surname").value = "";
+Для сотрудника можно будет задавать руководителя. Это будет делаться путем выбора из выпадающего списка всех
+сотрудников.
+
+Для этого в форму добавления сотрудника добавим выпадающий список:
+
+Руководитель:
+
+```html 
+<select id="managerSelect"></select>
 ```
 
-Дополнительные задания:
-- Реализовать возможность задать дату рождения сотрудника 
-- Реализовать валидацию поля ввода даты рождения
+Этот список надо заполнить списков всех сотрудников. Для этого реализуйте стандартную
+функцию `fillSelect(select, values, selectedValue)`. Данная функция будет принимать ссылку на `select` в первом
+параметре, массив объектов с текстом и значением во втором, и выбранное значение - в третьем. Например, следующий код:
 
+```javascript
+fillSelect(document.getElementById("managerSelect"), [{
+    text: " Иван Иванов",
+    value: 133
+},
+    {
+        text: " Петр Петров",
+        value: 134
+    }], 133);
+```
+
+Заполнит выпадающий список двумя значениями: Иван Иванов и Петр Петров, при этом Иван Иванов будет выбран изначально.
+
+Вот реализация такого метода:
+
+```javascript
+function fillSelect(select, values, selectedValue) {
+    for (let val of values) {
+        const option = document.createElement("option");
+        option.text = val.text;
+        option.value = val.value;
+        if (selectedValue == option.value) option.selected = true;
+        select.appendChild(option);
+    }
+}
+
+```
+
+Теперь нам надо создать массив `values` для заполнения дроп-дауна списком всех сотрудников. Это можно сделать так:
+
+```javascript
+function getEmployeesOptions() {
+    let options = [];
+    for (let e of DATA.employees) {
+        options.push({
+            text: e.name + ' '
+                + e.surname, value: e.id
+        });
+    }
+    return options;
+}
+```
+
+Остается заполнить дроп-даун списком сотрудников. Для этого добавим в `runUI()` такой вызов:
+
+```javascript
+fillSelect(document.getElementById("managerSelect"), getEmployeesOptions());
+```
+
+Теперь необходимо при добавлении сотрудника сохранять ссылку на менеджера. Ссылка будет называться `managerRef`, и будет
+содержать `id` сотрудника, являющегося руководителем. Для этого в `service.js` реализуем
+функцию `setEmployeeManager(id, managerId)`. Также в функции `addEmployeeUI()` будем получать и сохранять `id`
+менеджера:
+
+```javascript
+const id = addEmployee(name, surname);
+const managerId = document.getElementById("managerSelect").value;
+setEmployeeManager(id, managerId);
+```
+
+Теперь нам необходимо выводить руководителя в функции `showEmployees()`. Это можно сделать следующим образом:
+
+```javascript
+let managerHTML = "";
+if (employee.managerRef) {
+    let manager = findById(employee.managerRef);
+    managerHTML = " <b>Руководитель:</b> " + manager.name + " " + manager.surname;
+}
+li.innerHTML = employee.name + " " + employee.surname + managerHTML;
+```
+
+## Добавляем возможность изменить руководителя в списке.
+
+Реализуем возможность показывать руководителя. Для этого в функции `showEmployees()` в цикле по сотрудникам добавим
+возможность отображать не просто имя руководителя, а выпадающий список с выбранным руководителем. Также добавим
+обработчик события `onchange`. При изменении руководителя ссылка managerRef должна обновляться.
+
+```javascript
+if (employee.managerRef) {
+    let manager = findById(employee.managerRef);
+    const managerSpan = document.createElement("span");
+    const managerSelect = document.createElement("select");
+    fillSelect(managerSelect, getEmployeesOptions(), employee.managerRef);
+    managerSelect.addEventListener('change', () => employee.managerRef = managerSelect.value);
+    managerSpan.innerHTML = " <b>Руководитель:</b> ";
+    li.appendChild(managerSpan);
+    li.appendChild(managerSelect);
+}
+```
+
+Дополнительные задания
+
+- Реализовать возможность изменить имя, фамилию и дату рождения сотрудника

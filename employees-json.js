@@ -1,3 +1,7 @@
+/**
+ * Source data for app
+ * @type {{employees: Array<Employee>}}
+ */
 const DATA = {
     employees: [
         {

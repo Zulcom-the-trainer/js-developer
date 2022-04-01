@@ -1,4 +1,14 @@
 /**
+ * Employee
+ * @typedef {Object} Employee
+ * @property {number} id
+ * @property {string} name
+ * @property {string} surname
+ * @property {string} department
+ * @property {Date|undefined} dateOfBirth дата рождения сотрудника
+ * @property {string[]|undefined} phones список телефонов сотрудника
+ */
+/**
  * Функция находит сотрудника по его имени.
  * В случае, если имя или фамилия пустые, они игнорируются.
  * @param name
@@ -13,7 +23,7 @@
  * @example
  * findByName(null,"Иванов") находит всех Ивановых.
  *
- * @returns {*} список сотрудников
+ * @returns {Employee} список сотрудников
  */
 function findByName(name, surname) {
     // Использовать цикл for (лучше for ... of) для перебора сотрудников.
@@ -47,8 +57,8 @@ function addEmployee(name, surname, department = 'IT') {
     const id = max + 1;
     DATA.employees.push({
         id,
-        name,
-        surname,
+        name: name.trim(),
+        surname: surname.trim(),
         department
     })
     return id;
@@ -73,7 +83,8 @@ function removeEmployee(id) {
 /**
  * Функция выводит в консоль всю информацию о сотруднике.
  *
- * @param {*} employee сотрудник
+ * @param {Employee} employee сотрудник
+ * @return {string} сотрудник
  */
 function showEmployee(employee) {
     // Для этого функция должна использовать метод Object.keys для получения всех полей объекта employee. Далее она должна выводить информацию в формате ключ=значение в консоль, используя метод console.log().
@@ -84,11 +95,15 @@ function showEmployee(employee) {
             employeeEntries.push(`${key}: ${employee[key]}`)
         }
     }
-    console.log(`${employee.name} ${employee.surname} ${employeeEntries.join(', ')}`)
+    const text = `${employee.name} ${employee.surname} ${employeeEntries.join(', ')}`;
+    console.log(text)
+    return text;
 }
 
 /**
- * Функция showEmployees() должна брать список всех сотрудников из JSON и выводить информацию по каждому, используя функцию showEmployee(employee). Для перебора можно использовать for...of. Альтернативно можно использовать forEach.
+ * Функция showEmployees() должна брать список всех сотрудников из JSON
+ * и выводить информацию по каждому, используя функцию showEmployee(employee).
+ * Для перебора можно использовать for...of. Альтернативно можно использовать forEach.
  */
 function showEmployees() {
     for (const employee of DATA.employees) {
@@ -100,67 +115,114 @@ function showEmployees() {
 showEmployees();
 
 
-
+const employeeMap = {};
 
 /**
- * Функция findById(id) должна перебирать всех сотрудников и находить сотрудника с совпадающим id
- * @param {number} id ИД сотрудника
- * @returns {*} employee
- * @throws {Error} сотрудник с id не найден!
+ * Поиск сотрудника по id
+ * @param id
+ * @returns {Employee}
  */
 function findById(id) {
-
+    if (employeeMap[id]) {
+        return employeeMap[id];
+    }
+    for (var e of DATA.employees) {
+        if (id === e.id) {
+            employeeMap[id] = e;
+            return e;
+        }
+    }
 }
 
 /**
- * Список телефонов должен храниться внутри JSON-объекта сотрудник. В качестве поля используется свойство phones типа массив. Если такое поле у сотрудника отсутствует, оно должно быть создано.
- * @param {number} id
+ * Добавляет номер телефона.
+ * Для этого используется свойство phones типа массив.
+ * Если такое свойство отсутствует, оно создается.
+ * @param id
  * @param {string} phone
- * @throw {Error} сотрудник с id не найден!
  */
 function addPhone(id, phone) {
-
+    const employee = findById(id);
+    const phones = employee.phones;
+    if (!phones) {
+        employee.phones = [];
+    }
+    employee.phones.push(phone);
 }
 
 /**
  * Устанавливает дату рождения сотрудника
- * @param {number} id
- * @param {Date} date
+ * @param id
+ * @param date
  */
 function setDateOfBirth(id, date) {
-
+    const employee = findById(id);
+    employee.dateOfBirth = date;
 }
 
-// Функция getAge(id) принимает id сотрудника в качестве параметра и возвращает возраст сотрудника. Стоит отметить здесь, что в подобных случаях не стоит изобретать велосипед, и лучше нагуглить подходящее решение.
 /**
- *
- * @param {number} id
- * @throw {Error} У найденого сотрудника не установлена дата рождения
+ * Функция возвращает возраст сотрудника.
+ * Принимает id сотрудника в качестве параметра.
+ * Это решение вполне имеет смысл нагуглить.
+ * Стоит отметить здесь, что в подобных случаях не стоит изобретать велосипед.
+ * @param id
+ * @returns {number}
  */
 function getAge(id) {
-
+    const employee = findById(id);
+    let ageDiff = Date.now() - employee.dateOfBirth.getTime();
+    let ageDate = new Date(ageDiff);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
-// formatDate(date) Данная функция должна возвращать строку с датой. Для этого можно использовать методы класса Date: getDate() , getMonth(), getYear(). Для даты и месяца надо добавлять на первую позицию 0, если дата или месяц меньше 10.
 /**
- * Возвращает дату в формате дд.мм.гггг
- * @param {Date} date
+ * Приводит дату в формат ДД.ММ.ГГГГ
+ * @param date
+ * @returns {string}
  */
 function formatDate(date) {
-
+    let day = date.getDate();
+    if (day < 10) day = '0' + day;
+    let month = date.getMonth();
+    if (month < 10) month = '0' + month;
+    let year = date.getFullYear();
+    return `${day}.${month}.${year}`;
 }
 
 /**
- * Функция должна возвращать строку, содержащую подробную информацию о сотруднике: имя, фамилию, дату рождения в отформатированном виде, возраст, список телефонов сотрудника.
- * @param {number} id
- * @return {string}
+ * Возвращает строковое представление сотрудника
+ * @param id
+ * @returns {string}
  */
 function getEmployeeInfo(id) {
-
+    const e = findById(id);
+    const phones = e.phones ?
+        `Список телефонов: ${e.phones}` : '';
+    const age = e.dateOfBirth ?
+        `Возраст: ${getAge(e.id)}` : '';
+    return ` 
+		Имя: ${e.name}
+		Фамилия: ${e.surname}
+		Дата рождения: ${formatDate(e.dateOfBirth)}
+		${phones} 
+		${age}
+	`;
 }
 
-// Написать тестовую функцию, которая добавляет сотрудника, добавляет телефоны, устанавливает дату рождения, и выводит подробную информацию о сотруднике в консоль.
+/**
+ * Возвращает JSON сотрудника
+ * @param id
+ * @returns {string}
+ */
+function getEmployeeJSON(id) {
+    const e = findById(id);
+    return JSON.stringify(e);
+}
+
 function testEmployee() {
-
+    addPhone(133, "555-55-55");
+    addPhone(133, "666-66-66");
+    setDateOfBirth(133, new Date(2000, 1, 1))
+    const info = getEmployeeInfo(133);
+    console.log(info);
 }
-
