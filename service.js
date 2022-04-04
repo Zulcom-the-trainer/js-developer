@@ -1,3 +1,5 @@
+import {DATA} from "./employees-json";
+
 /**
  * Employee
  * @typedef {Object} Employee
@@ -9,6 +11,7 @@
  * @property {string[]|undefined} phones список телефонов сотрудника
  * @property {number} managerId ид руководителя
  */
+
 /**
  * Функция находит сотрудника по его имени.
  * В случае, если имя или фамилия пустые, они игнорируются.
@@ -45,7 +48,7 @@ function findByName(name, surname) {
  *
  * @returns {number} id of the new employee
  */
-function addEmployee(name, surname, department = 'IT') {
+export function addEmployee(name, surname, department = 'IT') {
     if (!name || !surname || name.length === 0 || surname.length === 0) {
         throw new Error("name or surname should be passed")
     }
@@ -69,7 +72,7 @@ function addEmployee(name, surname, department = 'IT') {
  * Удаляет сотрудника по id
  * @param {number} id
  */
-function removeEmployee(id) {
+export function removeEmployee(id) {
     let index = 0;
     for (const employee of DATA.employees) {
         if (employee.id === id) {
@@ -169,7 +172,7 @@ function setDateOfBirth(id, date) {
  * @param id
  * @returns {number}
  */
-function getAge(id) {
+export function getAge(id) {
     const employee = findById(id);
     let ageDiff = Date.now() - employee.dateOfBirth.getTime();
     let ageDate = new Date(ageDiff);
@@ -181,7 +184,7 @@ function getAge(id) {
  * @param date
  * @returns {string}
  */
-function formatDate(date) {
+export function formatDate(date) {
     let day = date.getDate();
     if (day < 10) day = '0' + day;
     let month = date.getMonth();
@@ -231,6 +234,32 @@ function testEmployee() {
 /**
  * @returns {SelectOption[]}
  */
-function getEmployeesOptions() {
+export function getEmployeesOptions() {
+    return DATA.employees.map((employee) => ({
+            text: `${employee.name} ${employee.surname}`,
+            value: employee.id
+        })
+    )
+}
+
+
+/**
+ * Поиск сотрудников по полям
+ * @param name
+ * @param surname
+ * @param managerId
+ */
+export function searchEmployee(name, surname, managerId) {
+    let results = [];
+    for (const employee of DATA.employees) {
+        if (
+            (!name || employee.name === name) &&
+            (!surname || employee.surname === surname) &&
+            (!managerId || (employee.managerId && employee.managerId === managerId))
+        ) {
+            results.push(employee)
+        }
+    }
+    return results;
 
 }

@@ -1,0 +1,15 @@
+{
+  "name": "luxoft-training-web-007",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "6.7.1",
+    "style-loader": "3.3.1",
+    "webpack": "^5.71.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

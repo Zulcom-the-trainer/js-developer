@@ -2,13 +2,14 @@
  * Source data for app
  * @type {{employees: Array<Employee>}}
  */
-const DATA = {
+export const DATA = {
     employees: [
         {
             id: 1,
             name: "Пафнутий",
             surname: "Пафнутьев",
-            department: "IT"
+            department: "IT",
+            managerId: 3,
         },
         {
             id: 2,

@@ -20,8 +20,8 @@
             color: #4d4d4d;
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 16px;
-            height: 100vh;
-            display: flex;
+            height:100vh;
+            display:flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
@@ -32,25 +32,16 @@
             padding: 0 10px;
         }
 
-        tbody tr td:last-child button {
-            margin-bottom: 5px;
-        }
-
-        tbody tr:last-child td:last-child button {
-            margin-bottom: 0;
-        }
-
         form {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px 5px;
+            gap:5px 5px;
             max-width: 500px;
             margin-bottom: 20px;
         }
-
-        form label {
+        form label{
             width: 100%;
-            flex-grow: 1;
+            flex-grow:1;
         }
 
     </style>
@@ -70,31 +61,46 @@
     <button type="submit">Добавить</button>
     <button type="reset">Очистить форму</button>
 </form>
+<form name="searchEmployeeForm">
+    <label>Имя сотрудника <input type="text" name="name"></label>
+    <label>Фамилия <input type="text" name="surname"></label>
+    <label>Руководитель <select name="managerRef"></select></label>
+    <button type="submit">Найти</button>
+    <button type="reset">Сбросить</button>
+</form>
 <div id="employeesPlaceholder"></div>
-<script src="employees-json.js"></script>
-<script src="service.js"></script>
-<script src="ui.js"></script>
+<script src="./dist/bundle.js"></script>
 <template id="employeeTableTemplate">
     <table cellspacing="0">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Date of birth</th>
-                <th>Age</th>
-                <th>Phones</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Date of birth</th>
+            <th>Age</th>
+            <th>Phones</th>
+            <th>Actions</th>
+            <th>Manager</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td data-field="id"></td>
-                <td data-field="name"></td>
-                <td data-field="department"></td>
-                <td data-field="dateOfBirth"></td>
-                <td data-field="age"></td>
-                <td data-field="phones"></td>
-            </tr>
+        <tr>
+            <td data-field="id"></td>
+            <td data-field="name"></td>
+            <td data-field="department"></td>
+            <td data-field="dateOfBirth"></td>
+            <td data-field="age"></td>
+            <td data-field="phones"></td>
+            <td data-field="actions">
+                <button type="button">Удалить</button>
+            </td>
+            <td data-field="managerSelect">
+                <select title="Select manager of employee">
+                    <option value="-1"></option>
+                </select>
+            </td>
+        </tr>
         </tbody>
     </table>
 </template>
