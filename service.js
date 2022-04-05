@@ -1,4 +1,4 @@
-import {DATA} from "./employees-json";
+import DATA from "./employees-json";
 
 /**
  * Employee

@@ -1,5 +1,10 @@
+const path = require("path");
 module.exports = {
-    entry: './main.js',
+    entry: [
+        'webpack-dev-server/client?http://localhost:8080',
+        'webpack/hot/only-dev-server',
+        './main.js'
+    ],
     devtool: 'source-map',
     mode: 'development',
     output: {
@@ -15,4 +20,10 @@ module.exports = {
             }
         ]
     },
+    devServer: {
+        hot: true,
+        static: {
+            directory: path.join(__dirname, 'dist')
+        }
+    }
 };

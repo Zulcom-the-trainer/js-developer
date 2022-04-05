@@ -1,15 +1,30 @@
 import {addEmployee, formatDate, getAge, getEmployeesOptions, removeEmployee, searchEmployee} from "./service";
-import {DATA} from "./employees-json";
+import DATA from "./employees-json";
 
 const employeePlaceholderID = "employeesPlaceholder"
 const addEmployeeFormUsernameErrorID = "addEmployeeForm-error-username"
 const addEmployeeFormSurnameErrorID = "addEmployeeForm-error-surname"
 const employeeTableTemplateId = "employeeTableTemplate"
+const inputFieldValidationError = "input_field__invalid"
+const hiddenElementClass = 'hidden'
+const toggleShowAddPaneButtonID = "add-btn"
+const paneClassName = 'pane'
+const toggleShowSearchPaneButtonID = "search-btn"
+const addPaneSectionID = "pane-add"
+const searchPaneSectionID = "pane-search"
+const toggleShowAddPaneButtonElement = document.getElementById(toggleShowAddPaneButtonID)
+const toggleShowSearchPaneButtonElement = document.getElementById(toggleShowSearchPaneButtonID)
+const addPaneSectionElement = document.getElementById(addPaneSectionID);
+const searchPaneSectionElement = document.getElementById(searchPaneSectionID);
 const placeholderElement = document.getElementById(employeePlaceholderID)
 const addEmployeeFormElement = document.forms['addEmployeeForm'];
 const searchEmployeeFormElement = document.forms['searchEmployeeForm'];
 const addEmployeeUsernameFieldErrorElement = document.getElementById(addEmployeeFormUsernameErrorID);
 const addEmployeeSurnameFieldErrorElement = document.getElementById(addEmployeeFormSurnameErrorID);
+
+toggleShowAddPaneButtonElement.addEventListener('click', () => openTab(addPaneSectionElement));
+toggleShowSearchPaneButtonElement.addEventListener('click', () => openTab(searchPaneSectionElement));
+
 let employeeTableTemplate;
 addEmployeeFormElement.addEventListener('submit', addEmployeeUI);
 searchEmployeeFormElement.addEventListener('submit', searchEmployeeUI);
@@ -76,8 +91,15 @@ export function runUI() {
     employeeTableTemplate = document.getElementById(employeeTableTemplateId)
     showEmployees(DATA.employees);
     const searchSelect = searchEmployeeFormElement.elements['managerRef'];
+    const employeesOptions = [{
+        text: '',
+        value: -1,
+    },
+        ...getEmployeesOptions()
+    ]
+
     searchSelect.parentNode.replaceChild(searchSelect,
-        fillSelect(searchSelect, getEmployeesOptions(),  -1)
+        fillSelect(searchSelect, employeesOptions, -1)
     )
 }
 
@@ -128,15 +150,60 @@ function fillSelect(select, values, selectedValue) {
     return select
 }
 
+function setFieldError(input) {
+    input.classList.add(inputFieldValidationError)
+}
+
+function resetFieldError(input) {
+    input.classList.remove(inputFieldValidationError)
+}
+
 function searchEmployeeUI(submitEvent) {
     submitEvent.preventDefault();
-    const name = searchEmployeeFormElement.elements['name'].value
-    const surname = searchEmployeeFormElement.elements['surname'].value
-    const managerRef = searchEmployeeFormElement.elements['managerRef'].value
-    const employees = searchEmployee(name, surname, Number.parseInt(managerRef,10));
-    showEmployees(employees);
+    const name = searchEmployeeFormElement.elements['name']
+    const surname = searchEmployeeFormElement.elements['surname']
+    const managerRef = searchEmployeeFormElement.elements['managerRef']
+    const validationErrors = []
+    if (!name.value || name.value.length === 0) {
+        validationErrors.push('name')
+    }
+    if (!surname.value || surname.value.length === 0) {
+        validationErrors.push('surname')
+    }
+    if (managerRef.value === "-1") {
+        validationErrors.push('managerRef')
+    }
+    if (!validationErrors.length) {
+        const employees = searchEmployee(name.value, surname.value, Number.parseInt(managerRef, 10));
+        showEmployees(employees);
+    } else {
+        resetFieldError(name)
+        resetFieldError(surname)
+        resetFieldError(managerRef)
+        if (validationErrors.includes('name')) {
+            setFieldError(name);
+        }
+        if (validationErrors.includes('surname')) {
+            setFieldError(surname);
+        }
+        if (validationErrors.includes('managerRef')) {
+            setFieldError(managerRef)
+        }
+
+    }
+
 }
 
 function resetEmployeeUI() {
     showEmployees(DATA.employees);
+}
+
+function openTab(element) {
+    const panes = document.querySelectorAll(`.${paneClassName}`);
+    panes.forEach((element) => {
+        element.classList.add(hiddenElementClass)
+        element.setAttribute('aria-selected', 'false')
+    })
+    element.classList.remove(hiddenElementClass);
+    element.setAttribute('aria-selected', 'true')
 }
