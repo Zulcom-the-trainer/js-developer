@@ -1,38 +1,52 @@
-import {addEmployee, formatDate, getAge, getEmployeesOptions, removeEmployee, searchEmployee} from "./service";
-import DATA from "./employees-json";
+import {addEmployee, formatDate, getEmployeesOptions, searchEmployee} from "../service";
+import DATA from "../employees-json";
+import {jsonToEmployees} from "../model/Employee";
+import {
+    employeeTableTemplateID,
+    hiddenElementClassName,
+    inputFieldValidationErrorClassName,
+    paneClassName
+} from "./constants";
+import {
+    addEmployeeFormElement,
+    addEmployeeSurnameFieldErrorElement,
+    addEmployeeUsernameFieldErrorElement,
+    addPaneSectionElement,
+    placeholderElement,
+    searchEmployeeFormElement,
+    searchPaneSectionElement,
+    toggleShowAddPaneButtonElement,
+    toggleShowSearchPaneButtonElement
+} from "./elements";
 
-const employeePlaceholderID = "employeesPlaceholder"
-const addEmployeeFormUsernameErrorID = "addEmployeeForm-error-username"
-const addEmployeeFormSurnameErrorID = "addEmployeeForm-error-surname"
-const employeeTableTemplateId = "employeeTableTemplate"
-const inputFieldValidationError = "input_field__invalid"
-const hiddenElementClass = 'hidden'
-const toggleShowAddPaneButtonID = "add-btn"
-const paneClassName = 'pane'
-const toggleShowSearchPaneButtonID = "search-btn"
-const addPaneSectionID = "pane-add"
-const searchPaneSectionID = "pane-search"
-const toggleShowAddPaneButtonElement = document.getElementById(toggleShowAddPaneButtonID)
-const toggleShowSearchPaneButtonElement = document.getElementById(toggleShowSearchPaneButtonID)
-const addPaneSectionElement = document.getElementById(addPaneSectionID);
-const searchPaneSectionElement = document.getElementById(searchPaneSectionID);
-const placeholderElement = document.getElementById(employeePlaceholderID)
-const addEmployeeFormElement = document.forms['addEmployeeForm'];
-const searchEmployeeFormElement = document.forms['searchEmployeeForm'];
-const addEmployeeUsernameFieldErrorElement = document.getElementById(addEmployeeFormUsernameErrorID);
-const addEmployeeSurnameFieldErrorElement = document.getElementById(addEmployeeFormSurnameErrorID);
+let employeeTableTemplate;
+export let employeesArray = jsonToEmployees(DATA.employees);
 
 toggleShowAddPaneButtonElement.addEventListener('click', () => openTab(addPaneSectionElement));
 toggleShowSearchPaneButtonElement.addEventListener('click', () => openTab(searchPaneSectionElement));
-
-let employeeTableTemplate;
 addEmployeeFormElement.addEventListener('submit', addEmployeeUI);
 searchEmployeeFormElement.addEventListener('submit', searchEmployeeUI);
 searchEmployeeFormElement.addEventListener('reset', resetEmployeeUI);
 
+export function runUI() {
+    employeeTableTemplate = document.getElementById(employeeTableTemplateID)
+    showEmployees(employeesArray);
+    const searchSelect = searchEmployeeFormElement.elements['managerRef'];
+    const employeesOptions = [{
+        text: '',
+        value: -1,
+    },
+        ...getEmployeesOptions(employeesArray)
+    ]
+
+    searchSelect.parentNode.replaceChild(searchSelect,
+        fillSelect(searchSelect, employeesOptions, -1)
+    )
+}
+
 /**
  * Выводит список сотрудников на страницу
- * @param employees
+ * @param {Employee[]} employees
  */
 function showEmployees(employees) {
     clearEmployeeElement();
@@ -46,16 +60,12 @@ function showEmployees(employees) {
         }, {});
         employeeRowCells['id'].textContent = employee.id;
         employeeRowCells['department'].textContent = employee.department;
-        employeeRowCells['name'].textContent = `${employee.name} ${employee.surname}`;
-        if (Array.isArray(employee.phones)) {
-            employeeRowCells['phones'].textContent = employee.phones;
-        }
-        if (employee.dateOfBirth) {
-            employeeRowCells['dateOfBirth'].textContent = formatDate(employee.dateOfBirth);
-            employeeRowCells['age'].textContent = getAge(employee.id);
-        }
+        employeeRowCells['name'].textContent = employee.fullName();
+        employeeRowCells['phones'].textContent = employee.phones;
+        employeeRowCells['dateOfBirth'].textContent = employee.dateOfBirth;
+        employeeRowCells['age'].textContent = employee.age;
         employeeRowCells['actions'].addEventListener('click', () => removeEmployeeUI(employee.id))
-        const targetSelectElement = fillSelect(employeeRowCells['managerSelect'].firstElementChild, getEmployeesOptions(), employee.managerId ?? -1
+        const targetSelectElement = fillSelect(employeeRowCells['managerSelect'].firstElementChild, getEmployeesOptions(employeesArray), employee.managerId ?? -1
         )
         targetSelectElement.addEventListener('change', () => {
             employee.managerRef = Number.parseInt(targetSelectElement.value, 10);
@@ -75,8 +85,8 @@ function showEmployees(employees) {
  * @param id
  */
 function removeEmployeeUI(id) {
-    removeEmployee(id);
-    showEmployees(DATA.employees);
+    employeesArray = employeesArray.filter(({id: iterationId}) => id !== iterationId)
+    showEmployees(employeesArray);
 }
 
 
@@ -85,22 +95,6 @@ function removeEmployeeUI(id) {
  */
 function clearEmployeeElement() {
     placeholderElement.innerHTML = '';
-}
-
-export function runUI() {
-    employeeTableTemplate = document.getElementById(employeeTableTemplateId)
-    showEmployees(DATA.employees);
-    const searchSelect = searchEmployeeFormElement.elements['managerRef'];
-    const employeesOptions = [{
-        text: '',
-        value: -1,
-    },
-        ...getEmployeesOptions()
-    ]
-
-    searchSelect.parentNode.replaceChild(searchSelect,
-        fillSelect(searchSelect, employeesOptions, -1)
-    )
 }
 
 function addEmployeeUI(submitEvent) {
@@ -119,8 +113,8 @@ function addEmployeeUI(submitEvent) {
     if (usernameValue.length > 0 && surnameValue.length > 0) {
         addEmployeeUsernameFieldErrorElement.textContent = ''
         addEmployeeSurnameFieldErrorElement.textContent = ''
-        addEmployee(usernameValue, surnameValue);
-        showEmployees(DATA.employees);
+        employeesArray = addEmployee(employeesArray, usernameValue, surnameValue)[1];
+        showEmployees(employeesArray);
         addEmployeeFormElement.reset();
     }
 }
@@ -151,11 +145,11 @@ function fillSelect(select, values, selectedValue) {
 }
 
 function setFieldError(input) {
-    input.classList.add(inputFieldValidationError)
+    input.classList.add(inputFieldValidationErrorClassName)
 }
 
 function resetFieldError(input) {
-    input.classList.remove(inputFieldValidationError)
+    input.classList.remove(inputFieldValidationErrorClassName)
 }
 
 function searchEmployeeUI(submitEvent) {
@@ -174,7 +168,7 @@ function searchEmployeeUI(submitEvent) {
         validationErrors.push('managerRef')
     }
     if (!validationErrors.length) {
-        const employees = searchEmployee(name.value, surname.value, Number.parseInt(managerRef, 10));
+        const employees = searchEmployee(employeesArray, name.value, surname.value, Number.parseInt(managerRef, 10));
         showEmployees(employees);
     } else {
         resetFieldError(name)
@@ -195,15 +189,15 @@ function searchEmployeeUI(submitEvent) {
 }
 
 function resetEmployeeUI() {
-    showEmployees(DATA.employees);
+    showEmployees(employeesArray);
 }
 
 function openTab(element) {
     const panes = document.querySelectorAll(`.${paneClassName}`);
     panes.forEach((element) => {
-        element.classList.add(hiddenElementClass)
+        element.classList.add(hiddenElementClassName)
         element.setAttribute('aria-selected', 'false')
     })
-    element.classList.remove(hiddenElementClass);
+    element.classList.remove(hiddenElementClassName);
     element.setAttribute('aria-selected', 'true')
 }

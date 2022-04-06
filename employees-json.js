@@ -10,6 +10,7 @@ export default {
             surname: "Пафнутьев",
             department: "IT",
             managerId: 3,
+            dateOfBirth:'2000-01-01'
         },
         {
             id: 2,
