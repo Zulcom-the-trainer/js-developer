@@ -48,13 +48,13 @@ export function runUI() {
  * Выводит список сотрудников на страницу
  * @param {Employee[]} employees
  */
-function showEmployees(employees) {
+async function showEmployees(employees) {
     clearEmployeeElement();
     const fragment = employeeTableTemplate.content.firstElementChild.cloneNode(true);
     const tbody = fragment.querySelector('tbody');
     for (const employee of employees) {
-        const employeeRow = tbody.firstElementChild.cloneNode(true);
-        const employeeRowCells = Array.from(employeeRow.children).reduce((acc, cell) => {
+        const iEmployeeRow = employeeRow.cloneNode(true);
+        const employeeRowCells = Array.from(iEmployeeRow.children).reduce((acc, cell) => {
             acc[cell.dataset.field] = cell
             return acc;
         }, {});
@@ -73,11 +73,8 @@ function showEmployees(employees) {
         employeeRowCells['managerSelect'].replaceChild(
             employeeRowCells['managerSelect'].firstElementChild,
             targetSelectElement)
-
-        tbody.appendChild(employeeRow);
+        tbody.appendChild(iEmployeeRow);
     }
-    tbody.firstElementChild.remove();
-    placeholderElement.appendChild(fragment);
 }
 
 /**

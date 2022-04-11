@@ -17,11 +17,17 @@ export class Employee extends Person {
         this.department = department;
         this.id = id
         this.managerId = managerId;
+        this.salary = 1000;
     }
 
     toString() {
         return `${super.toString()}
                 ${this._phones}`
+    }
+
+    static fromJSON(obj) {
+        const employee = new Employee();
+        return Object.assign(employee, obj)
     }
 
     toJSON() {
@@ -40,6 +46,22 @@ export class Employee extends Person {
 
     get phones() {
         return !Array.isArray(this._phones) ? '' : this._phones.join(', ')
+    }
+
+    bonus() {
+        return new Promise((resolve, reject) => {
+            const bonus = Math.round(Math.random() * 1000);
+            const maxBonusAmount = 700;
+            setTimeout(() => bonus > maxBonusAmount ? reject(bonus) : resolve(bonus), 1000)
+        })
+    }
+
+    /**
+     *
+     * @returns {Promise<number>}
+     */
+    async total() {
+        return this.salary + await this.bonus()
     }
 }
 

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "main": "main.js",
-  "scripts": {},
+  "scripts": {
+    "start": "webpack-dev-server",
+    "test": "jest"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {

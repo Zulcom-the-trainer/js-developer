@@ -48,9 +48,18 @@ export function addEmployee(employees, name, surname, department = 'IT') {
  */
 export function showEmployees(employees) {
     console.log('Employees data:')
-    console.table(employees)
+    printEmployeesData(employees)
 }
 
+export async function printEmployeesData(employees) {
+    for (const employee of employees) {
+        try {
+            console.log(employee.fullName(), ' total:' + await employee.total())
+        } catch (e) {
+            console.log(`${employee.fullName()} have too big bonus: ${e}`)
+        }
+    }
+}
 
 /**
  * @param {Employee[]} employees
