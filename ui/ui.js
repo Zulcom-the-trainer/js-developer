@@ -1,5 +1,4 @@
-import {addEmployee, formatDate, getEmployeesOptions, searchEmployee} from "../service";
-import DATA from "../employees-json";
+import {getEmployeesOptions} from "../service";
 import {jsonToEmployees} from "../model/Employee";
 import {
     employeeTableTemplateID,
@@ -9,6 +8,7 @@ import {
 } from "./constants";
 import {
     addEmployeeFormElement,
+    addEmployeeFormSubmitButtonElement,
     addEmployeeSurnameFieldErrorElement,
     addEmployeeUsernameFieldErrorElement,
     addPaneSectionElement,
@@ -18,9 +18,15 @@ import {
     toggleShowAddPaneButtonElement,
     toggleShowSearchPaneButtonElement
 } from "./elements";
+import {
+    addEmployeeOnServer,
+    findByNameSurnameManagerEmployee,
+    handleServerError,
+    removeEmployeeOnServer
+} from "../server";
 
 let employeeTableTemplate;
-export let employeesArray = jsonToEmployees(DATA.employees);
+export let employeesArray;
 
 toggleShowAddPaneButtonElement.addEventListener('click', () => openTab(addPaneSectionElement));
 toggleShowSearchPaneButtonElement.addEventListener('click', () => openTab(searchPaneSectionElement));
@@ -28,20 +34,38 @@ addEmployeeFormElement.addEventListener('submit', addEmployeeUI);
 searchEmployeeFormElement.addEventListener('submit', searchEmployeeUI);
 searchEmployeeFormElement.addEventListener('reset', resetEmployeeUI);
 
+/**
+ * Загрузка информации с сервера
+ * @returns {Promise<Employee[]>}
+ */
+function loadDataFromServer() {
+    return fetch('http://localhost:3333/employees')
+        .then((response) => response.json())
+        .then((res) => res._embedded.employees)
+        .then(jsonToEmployees)
+        .then((employees) => {
+            employeesArray = employees
+            showEmployees(employeesArray)
+            return employeesArray
+        })
+        .catch(handleServerError)
+}
+
 export function runUI() {
     employeeTableTemplate = document.getElementById(employeeTableTemplateID)
-    showEmployees(employeesArray);
-    const searchSelect = searchEmployeeFormElement.elements['managerRef'];
-    const employeesOptions = [{
-        text: '',
-        value: -1,
-    },
-        ...getEmployeesOptions(employeesArray)
-    ]
-
-    searchSelect.parentNode.replaceChild(searchSelect,
-        fillSelect(searchSelect, employeesOptions, -1)
-    )
+    loadDataFromServer()
+        .then(() => {
+            const searchSelect = searchEmployeeFormElement.elements['managerRef'];
+            const employeesOptions = [{
+                text: '',
+                value: -1,
+            },
+                ...getEmployeesOptions(employeesArray)
+            ]
+            searchSelect.parentNode.replaceChild(searchSelect,
+                fillSelect(searchSelect, employeesOptions, -1)
+            )
+        })
 }
 
 /**
@@ -52,6 +76,9 @@ async function showEmployees(employees) {
     clearEmployeeElement();
     const fragment = employeeTableTemplate.content.firstElementChild.cloneNode(true);
     const tbody = fragment.querySelector('tbody');
+    const employeeRow = tbody.firstElementChild.cloneNode(true);
+    tbody.firstElementChild.remove();
+    placeholderElement.appendChild(fragment);
     for (const employee of employees) {
         const iEmployeeRow = employeeRow.cloneNode(true);
         const employeeRowCells = Array.from(iEmployeeRow.children).reduce((acc, cell) => {
@@ -64,6 +91,11 @@ async function showEmployees(employees) {
         employeeRowCells['phones'].textContent = employee.phones;
         employeeRowCells['dateOfBirth'].textContent = employee.dateOfBirth;
         employeeRowCells['age'].textContent = employee.age;
+        /*  try {
+              employeeRowCells['total'].textContent = await employee.total()
+          } catch (e) {
+              employeeRowCells['total'].textContent = `bonus is too big: ${e}`
+          }*/
         employeeRowCells['actions'].addEventListener('click', () => removeEmployeeUI(employee.id))
         const targetSelectElement = fillSelect(employeeRowCells['managerSelect'].firstElementChild, getEmployeesOptions(employeesArray), employee.managerId ?? -1
         )
@@ -82,8 +114,7 @@ async function showEmployees(employees) {
  * @param id
  */
 function removeEmployeeUI(id) {
-    employeesArray = employeesArray.filter(({id: iterationId}) => id !== iterationId)
-    showEmployees(employeesArray);
+    removeEmployeeOnServer(id).then(loadDataFromServer).then(showEmployees)
 }
 
 
@@ -110,8 +141,14 @@ function addEmployeeUI(submitEvent) {
     if (usernameValue.length > 0 && surnameValue.length > 0) {
         addEmployeeUsernameFieldErrorElement.textContent = ''
         addEmployeeSurnameFieldErrorElement.textContent = ''
-        employeesArray = addEmployee(employeesArray, usernameValue, surnameValue)[1];
-        showEmployees(employeesArray);
+        addEmployeeFormSubmitButtonElement.disabled = true
+        addEmployeeOnServer(usernameValue, surnameValue)
+            .then(loadDataFromServer)
+            .then(showEmployees)
+            .finally(() => {
+
+                addEmployeeFormSubmitButtonElement.disabled = false;
+            })
         addEmployeeFormElement.reset();
     }
 }
@@ -165,8 +202,9 @@ function searchEmployeeUI(submitEvent) {
         validationErrors.push('managerRef')
     }
     if (!validationErrors.length) {
-        const employees = searchEmployee(employeesArray, name.value, surname.value, Number.parseInt(managerRef, 10));
-        showEmployees(employees);
+        /*  const employees = searchEmployee(employeesArray, name.value, surname.value, Number.parseInt(managerRef, 10));*/
+        findByNameSurnameManagerEmployee(name.value, surname.value, Number.parseInt(managerRef.value, 10))
+            .then(showEmployees)
     } else {
         resetFieldError(name)
         resetFieldError(surname)

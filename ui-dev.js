@@ -1,12 +1,9 @@
 import * as ui from './ui/ui';
 
 export * from './ui/ui';
-import DATA from './employees-json';
-import {showEmployees} from "./service";
 
 export function runUI() {
     ui.runUI();
-    showEmployees(ui.employeesArray)
 }
 
 export {searchPaneSectionID} from "./ui/constants";
@@ -28,3 +25,8 @@ export {searchPaneSectionElement} from "./ui/elements";
 export {addPaneSectionElement} from "./ui/elements";
 export {toggleShowSearchPaneButtonElement} from "./ui/elements";
 export {toggleShowAddPaneButtonElement} from "./ui/elements";
+export {findByNameSurnameManagerEmployee} from "./server";
+export {findByNameEmployeeOnServer} from "./server";
+export {removeEmployeeOnServer} from "./server";
+export {addEmployeeOnServer} from "./server";
+export {handleServerError} from "./server";

@@ -17,3 +17,4 @@ export const addEmployeeFormElement = document.forms['addEmployeeForm'];
 export const searchEmployeeFormElement = document.forms['searchEmployeeForm'];
 export const addEmployeeUsernameFieldErrorElement = document.getElementById(addEmployeeFormUsernameErrorID);
 export const addEmployeeSurnameFieldErrorElement = document.getElementById(addEmployeeFormSurnameErrorID);
+export const addEmployeeFormSubmitButtonElement = addEmployeeFormElement.querySelector('button[type="submit"]')
