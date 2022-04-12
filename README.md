@@ -1,129 +1,203 @@
-# Работа с сервером. REST-сервисы
+# Используем AXIOS для работы с сервером. Протокол WebSocket.
 
-## Изучение REST API через Swagger
+## Используем AXIOS для работы с сервером
 
-Задача этого занятия – разобраться с протоколом REST и научиться работать с REST через интерфейс `Swagger`.
+Возьмем наше приложение для управления сотрудниками и задачами.
+Сейчас оно работает локально, но теперь у нас есть все возможности, чтобы оно работало с сервером, как полноценное
+клиент-серверное приложение.
 
-Для этого перейдите в папку RestServer и запустите сервер командой
+### Создадим новый модуль в папке employees: `server.js`. Этот модуль будет содержать код для взаимодействия с сервером.
+
+Установим AXIOS:
 
 ```shell
-java -jar RestServer.jar
+npm i axios
 ```
 
-> У вас должен быть установлен JDK! Если его нет,
-> скачайте [с официального сайта](https://www.oracle.com/java/technologies/downloads/) и установите
-
-Подождите, пока сервер запустится.
-<details>
-<summary>Опциональные технические детали</summary>
-После старта по адресу http://localhost:3333 будет запущен HAL Browser
-для просмотра и выполнения REST запросов (работает как `HATEOAS`).
-Однако, нашей основной документацией для выполнения запросов будет `Swagger`.
-Также вы можете просматривать и изменять данные в базе данных – в нашем случае используется H2.
-Для этого надо пойти по адресу http://localhost:3333/h2/
-указать URL: `jdbc:h2:file:./employees_db`
-Имя пользователя и пароль можно оставить как есть. Соединившись, слева мы увидим список таблиц, и в нем –
-таблицы `EMPLOYEE` и `TASK`.
-</details>
-
-Наша задача сейчас – научиться взаимодействовать с сервером через REST API.
-
-Для этого откройте [интерфейс Swagger](http://localhost:3333/swagger-ui.html)
-
-- Перейдите в Employee Entity и попробуйте получить список всех сотрудников:
-  `GET /employees`
-
-- Далее получите информацию по одному отдельному сотруднику:
-  `GET /employees/{id}`
-
-- Добавьте нового сотрудника, введя его данные в формате JSON:
-  `POST /employees`
-
-- Снова получите список всех сотрудников.
-- Убедитесь, что новый сотрудник был добавлен.
-- Найдите сотрудника по имени, по фамилии:
-  `GET /employees/search/findByNameSurnameManager`, `GET /employees/search/findBySurname`
-
-- Обновите часть данных о сотруднике, используя `PATCH`.
-- Установите менеджера для сотрудника.
-- Замените данные о сотруднике полностью, используя `PUT`.
-- Добавьте задачу для сотрудника.
-- Получите список всех задач сотрудника.
-- Найдите информацию о сотруднике и убедитесь, что информация о задаче также отображается.
-- Добавьте новую задачу, установив сотрудника ответственным по указанной задаче.
-- Найдите сотрудника, ответственного за указанную задачу:
-  `GET /tasks/{id}/responsibleId`
-- Измените сотрудника, ответственного за указанную задачу:
-  `POST /tasks/{id}/responsibleId`
-
-- Воспользуйтесь «поиском по образцу»:
-  Найдите всех сотрудников, удовлетворяющих условиям, например с определенной фамилией и именем:
-  `POST /employees/findByExample`
-
-Как вы видите, нам доступны практически все возможные операции над сотрудниками и задачами.
-Задача разработки пользовательского интерфейса – лишь сделать удобный интерфейс для работы с REST-сервисом. Чем мы и
-будем заниматься.
-
-## Работа через браузер
-
-Теперь давайте попробуем получить данные, просто открывая страницы в браузере. Переход по URL – это и есть `GET`-запрос
-к
-серверу, поэтому с этим проблем возникнуть не должно. Например, если вы добавили сотрудника Петр Петров, вы легко можете
-найти его, используя [такой URL](http://localhost:3333/employees/search/findByName?name=Петр) – просто откройте его в
-браузере.
-По фамилии – можно найти [так](http://localhost:3333/employees/search/findBySurname?surname=Петров).
-
-Также [можно найти](http://localhost:3333/employees/search/findByNameSurnameManager?name=Петр&surname=Петров) по имени,
-фамилии и id менеджера – то есть тем полям, которые мы вводим в строку поиска:
-Обратите внимание, что мы здесь не указали `id` менеджера – любой из параметров опционален, и сервис ищет по тем
-параметрам, которые мы указали.
-
-Теперь мы в одном шаге от возможности получать данные программно.
-Давайте откроем консоль и введем такой код:
+Импортируем в `server.js` AXIOS и создадим переменную для работы с нашим сервером:
 
 ```js
-fetch(`http://localhost:3333/employees`)
-    .then(res => res.json())
-    .then(res => console.log(res._embedded.employees));
+import axios from 'axios';
+
+const employees = axios.create(
+    {baseURL: 'http://localhost:3333/employees'});
 ```
 
-Вы увидите список сотрудников с именем Петр, выведенных в лог.
-
-Можно также создавать и `POST`-запросы:
+Также нам понадобится обработчик ошибок, на случай возникновения ошибок. Вместо того чтобы писать каждый раз метод
+`.catch()` или блок `catch`, мы можем сделать единообразную обработку всех ошибочных ситуаций. Потенциально можно
+сообщать
+об ошибках пользователю, но пока мы будем просто выводить их в лог. AXIOS содержит необходимые для этого средства – это
+интерсептор, перехватчик обращений:
 
 ```js
-fetch('http://localhost:3333/employees/findByExample', {
-    method: 'post',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({name: 'Петр'})
-})
-    .then(res => res.json())
-    .then(res => console.log(res));
+function errorResponseHandler(error) {
+// if has response show the error
+    if (error.response.data.message) {
+        console.log("SERVER ERROR: " +
+            error.response.data.message);
+    }
+    if (error.message) {
+        console.log("SERVER ERROR: " + error.message);
+    } else {
+        console.log("ERROR: " + error);
+    }
+}
+
+// apply interceptor on response
+employees.interceptors.response.use(
+    response => response,
+    errorResponseHandler
+);
 ```
 
-Вот как, скажем, можно добавить нового сотрудника.
-Допустим, у нас есть объект с данными сотрудника:
+Таким образом, мы просим перехватчик предобрабатывать все результаты обращения к серверу, но для нормального развития
+событий мы просто возвращаем response в неизменном виде, а вот в случае ошибки вызываем наш кастомный
+`errorResponseHandler`. Он анализирует ошибку, и если в ней есть сообщение, выводит его в лог, а если нет – выводит сам
+объект ошибки. Обычно с сервера поступает сообщение с деталями ошибки.
+
+Теперь давайте определим функцию, которая будет загружать с сервера список всех сотрудников, и которая должна вызываться
+при старте приложения:
 
 ```js
-const employee = {
-    name: "Федор",
-    surname: "Федоров"
-};
-fetch('http://localhost:3333/employees', {
-    method: 'post',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(employee)
-})
-    .then(res => res.json())
-    .then(res => console.log(res));
+export async function getEmployees() {
+    let res = await employees.get('');
+    return res.data._embedded.employees;
+}
 ```
 
-В качестве результата мы получим только что добавленный объект – и сможем, например, прочитать его `id`.
+Импортируем server в `ui.js`, чтобы можно было им пользоваться:
 
-## Дополнительные задания
+```js
+import * as server from './server';
+```
 
-- Переведите интерфейс нашего приложения на работу с сервером.
+Теперь модифицируем метод `runUI()`, чтобы он поддерживал асинхронность:
+
+```js
+export async function runUI() {
+}
+```
+
+Изменим строчку, показывающую список сотрудников – теперь они не берутся из файла `JSON`, а приходят с сервера: вместо
+`showEmployees(getEmployees());`
+
+мы укажем
+`showEmployees(await server.getEmployees());`
+
+Теперь можно перегрузить страницу и посмотреть на результат – сотрудники уже загружаются с сервера!
+
+#### Однако нам еще многое предстоит сделать.
+
+Сейчас выпадающие списки менеджеров в поиске и добавлении сотрудника показывают списки сотрудников из `JSON` файла.
+Списки
+загружаются функцией `getEmployeesOptions()`. Давайте ее перепишем - она будет асинхронной и будет грузить менеджеров с
+сервера:
+
+```js
+async function getEmployeesOptions() {
+    let employees = await server.getEmployees();
+    return employees.map(e => {
+        return {text: e.name + ' ' + e.surname, value: e.id}
+    });
+}
+```
+
+Не забудьте обновить ее вызов на асинхронный в `runUI()`:
+`const employeesOptions = await getEmployeesOptions();`
+
+Снова можно перегрузить страницу и посмотреть на выпадающие списки.
+
+Теперь давайте реализуем возможность искать сотрудников с помощью поисковой формы. Для этого перепишем функцию
+`searchEmployeeUI`:
+
+```js
+export async function searchEmployeeUI() {
+    const name = document.getElementById("nameSearch").value || null;
+    const surname = document.getElementById("surnameSearch").value || null;
+    const managerId = document.getElementById("managerSearch").value || null;
+    const example = {name, surname, managerId};
+    showEmployees(await server.findByExample(example));
+}
+```
+
+Обратите внимание на изменения: во-первых, она стала асинхронной. Во-вторых, мы теперь используем переменную `managerId`
+,
+а не `managerRef`. В третьих мы создаем объект-образец `example` для поиска по образцу, который реализован в нашем
+REST-сервисе. Остается добавить функцию `findByExample()` в server.js:
+
+```js
+export async function findByExample(employee) {
+    let res = await employees.post('findByExample', employee);
+    return res.data;
+}
+```
+
+Убедитесь, что теперь работает поиск по параметрам.
+
+### Однако не все работает правильно. Вы могли заметить, что менеджер показывается некорректно.Нам нужно загружать список всех сотрудников (для выпадающего списка менеджеров) также с сервера – пока что он грузится функцией getEmployees().
+
+Поправим функцию `showEmployees`:
+
+```js
+async function showEmployees(employeesJSON) {
+    let employees = jsonToEmployees(employeesJSON);
+    let allEmployees = await server.getEmployees();
+    const html = showEmployeesView(allEmployees, employees);
+    document.getElementById(PLACEHOLDER).innerHTML = html;
+}
+```
+
+Окей, теперь все грузится с сервера.
+Еще одно исправление – поскольку у нас теперь используется ссылка `managerId`, a не `managerRef`, надо поправить вызов
+`employeeManagerView` в функции `showEmployeesView()`: `${employeeManagerView(allEmployees,e.managerId)}`
+
+Теперь менеджер в списке сотрудников должен отображаться корректно.
+
+### Но пока не работает добавление сотрудника. Давайте сделаем это! Добавим такую функцию в server.js:
+
+```js
+export async function addEmployee(name, surname, managerId = null) {
+    let e = await employees.post('', {name, surname, managerId});
+    return e.data;
+}
+```
+
+Эта функция позволяет передавать как 2, так и 3 параметра. Если параметра 2, менеджер не будет установлен. Также
+обратите внимание, что функция возвращает добавленного сотрудника, что позволяет, например, узнать его `id`.
+
+Давайте воспользуемся этой функцией. В функции `addEmployeeUI()` в `ui.js` сделайте следующее изменение:
+
+```js
+let employee = await server.addEmployee(name, surname);
+```
+
+Теперь мы добавляем сотрудника и получаем ссылку на него.
+Конечно, саму функцию надо пометить как асинхронную.
+
+Остается обновить информацию о менеджере – для этого вызовем функцию
+
+```js
+await server.setEmployeeManager(employee.id, managerId);
+```
+
+Ее у нас еще нет, но ее несложно добавить:
+
+```js
+export async function setEmployeeManager(id, managerId) {
+    await employees.post(id + '/managerId?id=' + managerId);
+}
+```
+
+Не забудьте после добавления сотрудника перезагрузить список сотрудников c сервера в конце `addEmployeeUI()`:
+
+```js
+showEmployees(await server.getEmployees());
+```
+
+### Остается возможность удалять сотрудника с сервера и выбирать менеджера в списке сотрудников из выпадающего списка – сделайте это самостоятельно.
+
+
+
+
+
+
