@@ -1,24 +1,30 @@
 import {jsonToEmployees} from "./model/Employee";
 
-const SERVER_BASE_URL = 'http://localhost:3333';
+import axios from 'axios';
 
-export function handleServerError(e) {
-    console.error(e)
-    document.write('Произошла ошибка сервера')
+const employeesServer = axios.create({baseURL: 'http://localhost:3333/employees'});
+
+export function handleServerError(error) {
+    if (error.response.data.message) {
+        console.warn('server error', error.response.data.message)
+    }
+    if (error.message) {
+        console.warn('request error', error.message)
+    } else {
+        console.error('unknown error occurred', error)
+    }
+}
+
+employeesServer.interceptors.response.use(response => response, handleServerError)
+
+export async function getEmployeesFromServer() {
+    const res = employeesServer.get('');
+    return res.data._embedded.employees.map(jsonToEmployees);
+
 }
 
 export function addEmployeeOnServer(name, surname) {
-    return fetch(`${SERVER_BASE_URL}/employees`, {
-        method: 'POST',
-        body: JSON.stringify({
-            name, surname
-        }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-        .then((response) => response.json())
-        .catch(handleServerError)
+    return employeesServer.post('', {name, surname})
 }
 
 /**
@@ -27,25 +33,8 @@ export function addEmployeeOnServer(name, surname) {
  * @returns {Promise<Response | void>}
  */
 export function removeEmployeeOnServer(id) {
-    return fetch(`${SERVER_BASE_URL}/employees/${id}`, {
-        method: 'delete'
-    }).catch(handleServerError)
+    return employeesServer.delete(`/${id}`)
 }
-
-/**
- * Search for Employee by his name
- * @param name {string}
- * @returns {Promise<Employee[]>}
- */
-function findByNameEmployeeOnServer(name) {
-    const params = new URLSearchParams()
-    params.set('name', name)
-    return fetch(`${SERVER_BASE_URL}/employees/search/findByName?` + params.toString())
-        .then(res => res.json())
-        .then((res) => res._embedded.employees)
-        .then(jsonToEmployees)
-}
-
 /**
  * Поиск сотрудников по имени+фамилии+руководителю
  * @param name {string}
@@ -58,8 +47,7 @@ export function findByNameSurnameManagerEmployee(name, surname, managerId) {
     params.set('name', name)
     params.set('surname', surname)
     params.set('managerId', managerId)
-    return fetch(`${SERVER_BASE_URL}/employees/search/findByNameSurnameManager?` + params.toString())
-        .then(res => res.json())
-        .then((res) => res._embedded.employees)
+    return employeesServer.get(`/search/findByNameSurnameManager?${params.toString()}`)
+        .then((res) => res.data._embedded.employees)
         .then(jsonToEmployees)
 }

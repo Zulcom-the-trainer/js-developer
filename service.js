@@ -14,31 +14,6 @@ export function formatDate(date) {
     return `${day}.${month}.${year}`;
 }
 
-/**
- * Функция добавляет сотрудника по имени. id присваивается автоматически, как самый большой id среди сотрудников + 1. В случае, если имя или фамилия не заданы, функция выбрасывает исключение с сообщением об ошибке.
- * @param employees {Employee[]} employees array
- * @param name {string} The name of the employee
- * @param surname {string} The surname of the employee
- * @param department {string} The department of the employee
- * @throw {Error} name or surname should be passed
- *
- * @returns {[number,Employee[]]} id of the new employee
- */
-export function addEmployee(employees, name, surname, department = 'IT') {
-    if (!name || !surname || name.length === 0 || surname.length === 0) {
-        throw new Error("name or surname should be passed")
-    }
-    let max = 0;
-    for (const employee of employees) {
-        if (employee.id > max) {
-            max = employee.id;
-        }
-    }
-    const id = max + 1;
-    employees.push(new Employee(name.trim(), surname.trim(), department, id))
-    return [id, employees];
-}
-
 
 /**
  * Функция showEmployees() должна брать список всех сотрудников из JSON
@@ -71,26 +46,4 @@ export function getEmployeesOptions(employees) {
             value: id
         })
     )
-}
-
-/**
- * Поиск сотрудников по полям
- * @param {Employee[]} employees
- * @param name
- * @param surname
- * @param managerId
- */
-export function searchEmployee(employees, name, surname, managerId) {
-    let results = [];
-    for (const employee of employees) {
-        if (
-            (!name || employee.name === name) &&
-            (!surname || employee.surname === surname) &&
-            (!managerId || (employee.managerId && employee.managerId === managerId))
-        ) {
-            results.push(employee)
-        }
-    }
-    return results;
-
 }

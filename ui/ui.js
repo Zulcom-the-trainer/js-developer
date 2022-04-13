@@ -20,7 +20,7 @@ import {
 } from "./elements";
 import {
     addEmployeeOnServer,
-    findByNameSurnameManagerEmployee,
+    findByNameSurnameManagerEmployee, getEmployeesFromServer,
     handleServerError,
     removeEmployeeOnServer
 } from "../server";
@@ -34,38 +34,20 @@ addEmployeeFormElement.addEventListener('submit', addEmployeeUI);
 searchEmployeeFormElement.addEventListener('submit', searchEmployeeUI);
 searchEmployeeFormElement.addEventListener('reset', resetEmployeeUI);
 
-/**
- * Загрузка информации с сервера
- * @returns {Promise<Employee[]>}
- */
-function loadDataFromServer() {
-    return fetch('http://localhost:3333/employees')
-        .then((response) => response.json())
-        .then((res) => res._embedded.employees)
-        .then(jsonToEmployees)
-        .then((employees) => {
-            employeesArray = employees
-            showEmployees(employeesArray)
-            return employeesArray
-        })
-        .catch(handleServerError)
-}
 
-export function runUI() {
+export async function runUI() {
     employeeTableTemplate = document.getElementById(employeeTableTemplateID)
-    loadDataFromServer()
-        .then(() => {
-            const searchSelect = searchEmployeeFormElement.elements['managerRef'];
-            const employeesOptions = [{
-                text: '',
-                value: -1,
-            },
-                ...getEmployeesOptions(employeesArray)
-            ]
-            searchSelect.parentNode.replaceChild(searchSelect,
-                fillSelect(searchSelect, employeesOptions, -1)
-            )
-        })
+    employeesArray = await getEmployeesFromServer()
+    const searchSelect = searchEmployeeFormElement.elements['managerRef'];
+    const employeesOptions = [{
+        text: '',
+        value: -1,
+    },
+        ...getEmployeesOptions(employeesArray)
+    ]
+    searchSelect.parentNode.replaceChild(searchSelect,
+        fillSelect(searchSelect, employeesOptions, -1)
+    )
 }
 
 /**
@@ -114,7 +96,9 @@ async function showEmployees(employees) {
  * @param id
  */
 function removeEmployeeUI(id) {
-    removeEmployeeOnServer(id).then(loadDataFromServer).then(showEmployees)
+    removeEmployeeOnServer(id)
+        .then(getEmployeesFromServer)
+        .then(showEmployees)
 }
 
 
@@ -143,7 +127,7 @@ function addEmployeeUI(submitEvent) {
         addEmployeeSurnameFieldErrorElement.textContent = ''
         addEmployeeFormSubmitButtonElement.disabled = true
         addEmployeeOnServer(usernameValue, surnameValue)
-            .then(loadDataFromServer)
+            .then(getEmployeesFromServer)
             .then(showEmployees)
             .finally(() => {
 
