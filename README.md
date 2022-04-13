@@ -1,203 +1,302 @@
-# Используем AXIOS для работы с сервером. Протокол WebSocket.
+# Использование TypeScript
 
-## Используем AXIOS для работы с сервером
+## Инсталляция и начало использования TS
 
-Возьмем наше приложение для управления сотрудниками и задачами.
-Сейчас оно работает локально, но теперь у нас есть все возможности, чтобы оно работало с сервером, как полноценное
-клиент-серверное приложение.
-
-### Создадим новый модуль в папке employees: `server.js`. Этот модуль будет содержать код для взаимодействия с сервером.
-
-Установим AXIOS:
+Установим необходимые пакеты:
 
 ```shell
-npm i axios
+ npm install --save-dev typescript ts-loader
 ```
 
-Импортируем в `server.js` AXIOS и создадим переменную для работы с нашим сервером:
+Мы устанавливаем компилятор `TypeScript` и загрузчик `TS` из `Webpack`, который мы будем использовать для сборки
+модулей.
 
-```js
-import axios from 'axios';
+- Создайте в корне проекта файл `tsconfig.json`. Это файл с конфигурацией TypeScript.
+  Поместите в него такой код:
 
-const employees = axios.create(
-    {baseURL: 'http://localhost:3333/employees'});
+ ```json
+ {
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "target": "es2022",
+    "lib": [
+      "es2022",
+      "DOM"
+    ],
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "jsx": "react",
+    "allowJs": true
+  },
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
 ```
 
-Также нам понадобится обработчик ошибок, на случай возникновения ошибок. Вместо того чтобы писать каждый раз метод
-`.catch()` или блок `catch`, мы можем сделать единообразную обработку всех ошибочных ситуаций. Потенциально можно
-сообщать
-об ошибках пользователю, но пока мы будем просто выводить их в лог. AXIOS содержит необходимые для этого средства – это
-интерсептор, перехватчик обращений:
+Это - настройки языка `TypeScript`. Обратите внимание на `include` и `exclude`. Первое – это шаблон для включения файлов
+в
+компиляцию. Второе – указание, что папка `node_modules` должна быть исключена из компиляции. В настройках компилятора
+`compilerOptions` мы устанавливаем выходную директорию `dist` – туда будет помещен собранный код. Также мы указываем
+целевой
+язык – здесь это `es2017`, но вы можете указать один из вариантов: `es3`, `es5`, `es2015`, `es2016`, `es2018`,`es2019`
+,`es2020`,`es2021`,`es2022`,`esnext` – это разные версии
+JavaScript. Например, если включить `target` `es5`, то код будет компилироваться в код, совместимый с `ES5`, то есть
+работать
+и на старых браузерах, но объем кода будет самым большим, и он будет работать медленнее. Настройка `lib` позволяет
+указать, что из нашего кода мы сможем использовать `es2017` и DOM-библиотеки. `experimentalDecorators` включают
+поддержку
+декораторов, `sourceMap` позволяет генерировать соответствие TS файлов и бандл, что позволяет видеть исходный TypeScript
+в
+отладчике.
+Особенно стоит обратить внимание на настройку `noImplicitAny`. Если она включена, то для того, чтобы использовать код
+JS,
+надо указывать, что переменные имеют тип, иначе будет ошибка. Скажем, такой код будет ошибочным:
+
+```ts
+function log(someArg) {
+} // Error : someArg has an implicit `any` type
+```
+
+И чтобы его исправить, нужно явным образом указать тип any или какой-то более конкретный:
+
+```ts
+function log(someArg: any) {
+}
+```
+
+- Еще нам понадобится `Webpack`. В целом его настройка обычная, но нам нужно подключить `ts-loader`, который будет
+  пропускать через себя `TS`-файлы и выдавать уже JS, который далее будет собираться в бандл.
+  Вот код для его настройки` webpack.config.js`:
 
 ```js
-function errorResponseHandler(error) {
-// if has response show the error
-    if (error.response.data.message) {
-        console.log("SERVER ERROR: " +
-            error.response.data.message);
+const path = require('path');
+module.exports = {
+    entry: './mainTs.ts',
+    devtool: 'inline-source-map',
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js']
+    },
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist')
     }
-    if (error.message) {
-        console.log("SERVER ERROR: " + error.message);
-    } else {
-        console.log("ERROR: " + error);
+};
+```
+
+Инфраструктура готова, и мы можем создать файл `mainTs.ts` и запустить автоматическую сборку командой
+
+## Пишем классы с использованием TS
+
+- Определите класс `Person` с помощью конструктора, используя имя в качестве параметра.
+- Реализуйте функцию `getInfo()`, используя интерполяцию строки: она должна возвращать строковое представление `Person`.
+- Реализуйте метод получения/установки имени; метод `set name` должен проверять длину имени: оно должно быть не менее 3.
+
+- Определите класс `Person` в `Person.ts` и выполните его экспорт:
+
+```ts
+export class Person {
+    constructor(private _name: string) {
     }
 }
-
-// apply interceptor on response
-employees.interceptors.response.use(
-    response => response,
-    errorResponseHandler
-);
 ```
 
-Таким образом, мы просим перехватчик предобрабатывать все результаты обращения к серверу, но для нормального развития
-событий мы просто возвращаем response в неизменном виде, а вот в случае ошибки вызываем наш кастомный
-`errorResponseHandler`. Он анализирует ошибку, и если в ней есть сообщение, выводит его в лог, а если нет – выводит сам
-объект ошибки. Обычно с сервера поступает сообщение с деталями ошибки.
+- Определите метод getInfo():
 
-Теперь давайте определим функцию, которая будет загружать с сервера список всех сотрудников, и которая должна вызываться
-при старте приложения:
+```ts
+getInfo()
+{
+    return `person: ${this.name}`
+}
 
-```js
-export async function getEmployees() {
-    let res = await employees.get('');
-    return res.data._embedded.employees;
+```
+
+- Определите методы получения и изменения свойства имени:
+
+```
+set name(name)
+{
+    if (name.length < 3)
+        throw `incorrect name ${name}`
+    this._name = name
+}
+
+get name()
+{
+    return this._name
 }
 ```
 
-Импортируем server в `ui.js`, чтобы можно было им пользоваться:
+- Определите класс `Employee`, расширяющий класс `Person`, добавив свойства `salary` и `position` и переопределив
+  функцию
+  `getInfo()`.
 
-```js
-import * as server from './server';
+- Создайте файл `Employee.ts` и импортируйте `Person`:
+  `import {Person} from './Person'`
+
+- Создайте класс `Position.ts` и импортируйте его в `Person.ts`.`Position.ts` должен быть таким:
+
+```ts
+
+export enum Position {
+    MANAGER,
+    DEVELOPER,
+    DIRECTOR
+}
+
 ```
 
-Теперь модифицируем метод `runUI()`, чтобы он поддерживал асинхронность:
+- Определите класс `Employee`, который расширяет класс `Person`:
 
-```js
-export async function runUI() {
+ ```ts
+ export class Employee extends Person {
+    constructor(_name: string, public position: Position, public salary: number) {
+        super(_name);
+    }
 }
 ```
 
-Изменим строчку, показывающую список сотрудников – теперь они не берутся из файла `JSON`, а приходят с сервера: вместо
-`showEmployees(getEmployees());`
+- Переопределите `getInfo()` и вызовите `getInfo()` из суперкласса:
 
-мы укажем
-`showEmployees(await server.getEmployees());`
-
-Теперь можно перегрузить страницу и посмотреть на результат – сотрудники уже загружаются с сервера!
-
-#### Однако нам еще многое предстоит сделать.
-
-Сейчас выпадающие списки менеджеров в поиске и добавлении сотрудника показывают списки сотрудников из `JSON` файла.
-Списки
-загружаются функцией `getEmployeesOptions()`. Давайте ее перепишем - она будет асинхронной и будет грузить менеджеров с
-сервера:
-
-```js
-async function getEmployeesOptions() {
-    let employees = await server.getEmployees();
-    return employees.map(e => {
-        return {text: e.name + ' ' + e.surname, value: e.id}
-    });
+```ts
+getInfo()
+{
+    return super.getInfo() +
+        ` ${this.position} ${this.salary}`
 }
 ```
 
-Не забудьте обновить ее вызов на асинхронный в `runUI()`:
-`const employeesOptions = await getEmployeesOptions();`
+- Определите класс `Employees` с инкапсулированным списком сотрудников с помощью статических методов:
+- `add()` для добавления сотрудника в скрытый список сотрудников; он должен включать проверку типа и генерировать
+  исключение в случае, если добавленное значение не Employee;
+    - `list()` для возврата копии списка всех сотрудников.
 
-Снова можно перегрузить страницу и посмотреть на выпадающие списки.
+- Создайте файл `Employees.ts` и импортируйте `Employee`:
 
-Теперь давайте реализуем возможность искать сотрудников с помощью поисковой формы. Для этого перепишем функцию
-`searchEmployeeUI`:
+  `import { Employee } from "./Employee"`
 
-```js
-export async function searchEmployeeUI() {
-    const name = document.getElementById("nameSearch").value || null;
-    const surname = document.getElementById("surnameSearch").value || null;
-    const managerId = document.getElementById("managerSearch").value || null;
-    const example = {name, surname, managerId};
-    showEmployees(await server.findByExample(example));
+- Создайте экспортированный класс `Employees`:
+  `export class Employees { }`
+
+- Определите переменную модуля для списка сотрудников:
+
+  `static _employees: Employee[] = [];`
+
+    - Добавьте статический метод `add()` для добавления новых сотрудников в массив `_employees` и убедитесь, что
+      аргументом является `Employee`:
+
+```
+static add(employee:Employee) {
+Employees._employees.push(employee)
 }
 ```
 
-Обратите внимание на изменения: во-первых, она стала асинхронной. Во-вторых, мы теперь используем переменную `managerId`
-,
-а не `managerRef`. В третьих мы создаем объект-образец `example` для поиска по образцу, который реализован в нашем
-REST-сервисе. Остается добавить функцию `findByExample()` в server.js:
+- Добавьте статический метод `list()` который возвращает список сотрудников:
 
-```js
-export async function findByExample(employee) {
-    let res = await employees.post('findByExample', employee);
-    return res.data;
+```
+static list():Employee[] {
+return [...Employees.employees];
+}
+
+```
+
+-Создайте модуль `mainTs.ts`, который должен:
+
+- создавать нескольких сотрудников и добавлять их в массив `Employees` с помощью функции `add()`;
+- печатать список сотрудников с помощью метода `getInfo()`.
+- импортируйте `Employee` и `Employees`:
+
+```ts
+import { Employees } from "./Employees"
+import { Employee } from "./Employee"
+```
+
+- Внутри `mainTs.ts` создайте функцию `main`. Внутри нее Создайте нескольких сотрудников и добавьте их с помощью
+  метода `Employees.add()`:
+
+```ts
+Employees.add(new Employee("John", "manager", 1000));
+Employees.add(new Employee("Bill", "developer", 5000));
+Employees.add(new Employee("James", "director", 4000));
+```
+
+- Получите список сотрудников:
+
+```
+let employees:Employee[] = Employees.list();
+```
+
+- Создайте переменную в виде заполнителя `html`:
+  `let html=""`
+
+- Выполните итерацию по сотрудникам, чтобы добавить `html` представление:
+
+```ts
+
+for (let e of employees) {
+    html += e.getInfo() + "<br>"
 }
 ```
 
-Убедитесь, что теперь работает поиск по параметрам.
+- Выведите полученный `html` на веб-страницу: `document.getElementById("employees").innerHTML = html;`
 
-### Однако не все работает правильно. Вы могли заметить, что менеджер показывается некорректно.Нам нужно загружать список всех сотрудников (для выпадающего списка менеджеров) также с сервера – пока что он грузится функцией getEmployees().
+- Теперь нам нужно получить возможность ссылаться на main. Сделаем глобальную ссылку:
+      `window.run = main;`
+Но вы увидите ошибку, т.к. в объекте window нет метода `run`, и если JS спокойно бы это проглотил, TS будет на это
+жаловаться. Попробуйте щелкнуть с `Ctrl` по `window` – и посмотрите, где вы окажетесь. Это – файл `lib.es6.d.ts`,
+предоставляющий обертки для стандартных типов. Но метод `run` в нем конечно не описан – его надо добавить.
 
-Поправим функцию `showEmployees`:
+В данном случае нам надо расширить интерфейс `window` – давайте сделаем это:
 
-```js
-async function showEmployees(employeesJSON) {
-    let employees = jsonToEmployees(employeesJSON);
-    let allEmployees = await server.getEmployees();
-    const html = showEmployeesView(allEmployees, employees);
-    document.getElementById(PLACEHOLDER).innerHTML = html;
+```
+declare global {
+interface Window {
+run: () => void;
+}
 }
 ```
 
-Окей, теперь все грузится с сервера.
-Еще одно исправление – поскольку у нас теперь используется ссылка `managerId`, a не `managerRef`, надо поправить вызов
-`employeeManagerView` в функции `showEmployeesView()`: `${employeeManagerView(allEmployees,e.managerId)}`
+После этого вы спокойно сможете присвоить переменной `window.run` значение – указатель на функцию.
+Есть и более простой, но менее правильный способ записать значение в `window.run`:
+`(<any>window).run = function() { … }`
 
-Теперь менеджер в списке сотрудников должен отображаться корректно.
+- Создайте `employees.html` который должен использовать `mainTs.ts` и отображать всю информацию:
 
-### Но пока не работает добавление сотрудника. Давайте сделаем это! Добавим такую функцию в server.js:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employees</title>
+</head>
+<body>
+<div id="employees"></div>
+</body>
 
-```js
-export async function addEmployee(name, surname, managerId = null) {
-    let e = await employees.post('', {name, surname, managerId});
-    return e.data;
-}
+<script src="dist/bundle.js"></script>
+<script>
+    run();
+</script>
+</html>
 ```
 
-Эта функция позволяет передавать как 2, так и 3 параметра. Если параметра 2, менеджер не будет установлен. Также
-обратите внимание, что функция возвращает добавленного сотрудника, что позволяет, например, узнать его `id`.
+- Откройте `employees.html`. В нем должен быть список сотрудников с информацией, полученной с помощью `getInfo()`.
 
-Давайте воспользуемся этой функцией. В функции `addEmployeeUI()` в `ui.js` сделайте следующее изменение:
+## Дополнительное задание
 
-```js
-let employee = await server.addEmployee(name, surname);
-```
-
-Теперь мы добавляем сотрудника и получаем ссылку на него.
-Конечно, саму функцию надо пометить как асинхронную.
-
-Остается обновить информацию о менеджере – для этого вызовем функцию
-
-```js
-await server.setEmployeeManager(employee.id, managerId);
-```
-
-Ее у нас еще нет, но ее несложно добавить:
-
-```js
-export async function setEmployeeManager(id, managerId) {
-    await employees.post(id + '/managerId?id=' + managerId);
-}
-```
-
-Не забудьте после добавления сотрудника перезагрузить список сотрудников c сервера в конце `addEmployeeUI()`:
-
-```js
-showEmployees(await server.getEmployees());
-```
-
-### Остается возможность удалять сотрудника с сервера и выбирать менеджера в списке сотрудников из выпадающего списка – сделайте это самостоятельно.
-
-
-
-
-
-
+- Реализуйте возможность добавления и удаления сотрудников, а также вычисление средней зарплаты.

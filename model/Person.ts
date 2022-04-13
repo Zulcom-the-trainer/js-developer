@@ -1,13 +1,14 @@
-import {formatDate} from "../service";
+import { formatDate } from "../service";
 
 export class Person {
-    #_dateOfBirth;
-    constructor(name, surname) {
-        this.name = name;
-        this.surname = surname;
+    #_dateOfBirth: Date;
+    name: string;
+    surname: string;
+
+    constructor(name: string, surname: string) {
     }
 
-    fullName() {
+    fullName(): string {
         return `${this.name} ${this.surname}`;
     }
 
@@ -15,32 +16,27 @@ export class Person {
      * Функция возвращает возраст сотрудника.
      * Это решение вполне имеет смысл нагуглить.
      * Стоит отметить здесь, что в подобных случаях не стоит изобретать велосипед.
-     * @returns {number|string}
      */
-    get age() {
-        if(!this.#_dateOfBirth) return ''
+    get age(): number {
+        if (!this.#_dateOfBirth) return -1
         let ageDiff = Date.now() - this.#_dateOfBirth.getTime();
         let ageDate = new Date(ageDiff);
         return Math.abs(ageDate.getUTCFullYear() - 1970);
     }
 
-    /**
-     *
-     * @param {string} value date as string
-     */
     set dateOfBirth(value) {
         this.#_dateOfBirth = new Date(value);
     }
 
-    get dateOfBirth() {
-        return this.#_dateOfBirth ?  formatDate(this.#_dateOfBirth) : '';
+    get dateOfBirth(): string {
+        return this.#_dateOfBirth ? formatDate(this.#_dateOfBirth) : '';
     }
 
     /**
      * Возвращает строковое представление сотрудника
      * @returns {string}
      */
-    toString() {
+    toString(): string {
         const age = this.#_dateOfBirth ?
             `Возраст: ${this.age}` : '';
         return ` 
@@ -51,8 +47,8 @@ export class Person {
 		`
     }
 
-    static fromJSON(obj) {
-        const person = new Person();
+    static fromJSON(obj: Person): Person {
+        const person = new Person(obj.name, obj.surname);
         return Object.assign(person, obj)
     }
 }

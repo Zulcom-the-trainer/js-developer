@@ -26,7 +26,6 @@ export {addPaneSectionElement} from "./ui/elements";
 export {toggleShowSearchPaneButtonElement} from "./ui/elements";
 export {toggleShowAddPaneButtonElement} from "./ui/elements";
 export {findByNameSurnameManagerEmployee} from "./server";
-export {findByNameEmployeeOnServer} from "./server";
 export {removeEmployeeOnServer} from "./server";
 export {addEmployeeOnServer} from "./server";
 export {handleServerError} from "./server";
